@@ -66,6 +66,10 @@ or the menu bar. It shows whether the lock is on and switches it with one tap.
 
 The control talks to the running app, so keep MicLock running (turn on **Open at login**).
 
+<p align="center">
+  <img src="docs/control-center.png" width="384" alt="MicLock toggle in Control Center">
+</p>
+
 ## 🛠️ Build from source
 
 Needs Xcode 26 or later: the Control Center toggle is built against the macOS 26 SDK.
