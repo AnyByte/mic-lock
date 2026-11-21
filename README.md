@@ -19,21 +19,11 @@
 
 ---
 
-## 🎧 Why
+## 🎧 About
 
-Every time you connect headphones, macOS makes **their** microphone the input device.
-With Bluetooth headphones that's a bad deal: the moment anything uses that microphone,
-the headphones drop from high-quality stereo to the low-bitrate headset profile. That's why
-the other side of a call sounds muffled and music turns flat during calls. The MacBook's own
-microphone usually sounds better anyway.
-
-The built-in microphone also has a habit of getting quieter on its own: call apps and
-macOS lower its input volume now and then, and you only notice when people stop hearing you.
-
-MicLock fixes both. It switches the input back to the built-in microphone as soon as macOS
-changes it, and puts the input volume back to the level you set (100 % by default) whenever
-something changes it.
-Your headphones keep playing in full quality.
+macOS switches the input to your headphones' microphone every time you connect them, which drops
+Bluetooth headphones to low-quality call audio. MicLock keeps the MacBook's built-in microphone
+selected and holds its input volume, which apps and macOS like to lower on their own.
 
 <p align="center">
   <img src="docs/menu.png" width="292" alt="MicLock menu: current input, lock and volume toggles">
