@@ -3,12 +3,15 @@
 // headphones into the low-quality headset profile); MicLock switches straight back.
 //
 // Lives in the menu bar; the icon can be hidden in Settings, and opening the app again
-// (Finder, Spotlight, Launchpad) brings the Settings window back. miclock://toggle, on, off
-// switch the lock from Shortcuts / Control Center.
+// (Finder, Spotlight, Launchpad) brings the Settings window back. On macOS 26+ a Control
+// Center toggle (widget/, embedded as a WidgetKit extension) switches the lock;
+// miclock://toggle, on, off do the same from scripts.
 import AppKit
 import CoreAudio
 import ServiceManagement
 import SwiftUI
+import WidgetKit
+import notify
 
 // MARK: - CoreAudio
 
@@ -118,6 +121,12 @@ final class Model: ObservableObject {
     }
 
     private func save(_ key: String, _ value: Bool) { defaults.set(value, forKey: key) }
+
+    func reloadLockFromDefaults() {
+        defaults.synchronize()
+        let stored = defaults.object(forKey: "enabled") as? Bool ?? true
+        if stored != lockEnabled { lockEnabled = stored }
+    }
 }
 
 // MARK: - App
@@ -131,8 +140,6 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
     var watchedMic: AudioObjectID?
     var displaced: AudioObjectID?  // input MicLock replaced, handed back when the lock goes off
     var enforcePending = false
-    var hud: NSPanel?
-    var hudTimer: Timer?
     var launchedAtLogin = false
 
     func applicationWillFinishLaunching(_ note: Notification) {
@@ -159,6 +166,11 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
             self, selector: #selector(showSettings), name: Controller.showSettingsNote, object: nil)
 
         model.controller = self
+        // The Control Center toggle writes "enabled" into our defaults and posts this.
+        var token: Int32 = 0
+        notify_register_dispatch("org.anybyte.miclock.changed", &token, .main) { [weak self] _ in
+            self?.model.reloadLockFromDefaults()
+        }
         for selector in [kAudioHardwarePropertyDefaultInputDevice, kAudioHardwarePropertyDevices] {
             var addr = address(selector)
             AudioObjectAddPropertyListenerBlock(systemObject, &addr, .main) { [weak self] _, _ in self?.scheduleEnforce() }
@@ -183,6 +195,9 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
     func lockChanged() {
         if model.lockEnabled { enforce() } else { restoreExternalInput() }
         updateStatusItem()
+        if #available(macOS 26.0, *) {
+            ControlCenter.shared.reloadControls(ofKind: "org.anybyte.miclock.control")
+        }
     }
 
     // CoreAudio fires several notifications per device change (a Bluetooth connect sends a burst).
@@ -246,7 +261,7 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
         if model.currentVolume != volume { model.currentVolume = volume }
     }
 
-    // MARK: URL scheme (Shortcuts, Control Center)
+    // MARK: URL scheme (scripts, Shortcuts)
 
     @objc func handleURL(_ event: NSAppleEventDescriptor, _ reply: NSAppleEventDescriptor) {
         guard let string = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
@@ -257,44 +272,6 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
         case "toggle": model.lockEnabled.toggle()
         case "settings": showSettings(); return
         default: return
-        }
-        showHUD()
-    }
-
-    // Small icon-only pill under the right end of the menu bar, where the Shortcuts run
-    // indicator appears: Control Center shortcut tiles can't show state themselves.
-    func showHUD() {
-        hud?.orderOut(nil)
-        let size = NSSize(width: 44, height: 30)
-        let panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
-                            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        panel.level = .statusBar
-        panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = true
-        panel.ignoresMouseEvents = true
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let background = NSVisualEffectView(frame: NSRect(origin: .zero, size: size))
-        background.material = .hudWindow
-        background.state = .active
-        background.wantsLayer = true
-        background.layer?.cornerRadius = size.height / 2
-        let icon = NSImageView(frame: NSRect(x: 10, y: 4, width: 24, height: 22))
-        icon.image = NSImage(systemSymbolName: model.lockEnabled ? "mic.fill" : "mic.slash.fill",
-                             accessibilityDescription: nil)?
-            .withSymbolConfiguration(.init(pointSize: 15, weight: .semibold))
-        icon.contentTintColor = model.lockEnabled ? .systemGreen : .systemGray
-        background.addSubview(icon)
-        panel.contentView = background
-        if let screen = NSScreen.main {
-            let visible = screen.visibleFrame  // below the menu bar
-            panel.setFrameOrigin(NSPoint(x: visible.maxX - size.width - 12, y: visible.maxY - size.height - 6))
-        }
-        panel.orderFrontRegardless()
-        hud = panel
-        hudTimer?.invalidate()
-        hudTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
-            self?.hud?.orderOut(nil)
         }
     }
 
@@ -424,7 +401,7 @@ struct SettingsView: View {
                         .font(.footnote).foregroundColor(.secondary)
                 }
                 Section {
-                    Text("Shortcuts can open miclock://toggle, miclock://on or miclock://off. Add such a shortcut to Control Center for a one-tap switch.")
+                    Text("Control Center → Edit Controls → MicLock adds a one-tap toggle (macOS 26 and later).")
                         .font(.callout).foregroundColor(.secondary)
                 } header: {
                     Text("Control Center")

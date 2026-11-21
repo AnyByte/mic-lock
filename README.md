@@ -35,7 +35,7 @@ changes it, and puts the input volume back to 100 % whenever something lowers it
 Your headphones keep playing in full quality.
 
 <p align="center">
-  <img src="docs/menu.png" width="320" alt="MicLock menu: current input, lock and volume toggles">
+  <img src="docs/menu.png" width="292" alt="MicLock menu: current input, lock and volume toggles">
 </p>
 
 ## ✨ Features
@@ -46,7 +46,8 @@ Your headphones keep playing in full quality.
 | 🔊 **Input volume at 100 %** | Puts the level back whenever an app or macOS turns it down. Can be turned off separately. |
 | 🔁 **Clean off switch** | Turning the lock off hands the input back to the headset it replaced (or the Bluetooth one), just like macOS would have done. |
 | 🧭 **Menu bar or hidden** | Lives in the menu bar; hide the icon in Settings and open MicLock again from Finder or Spotlight to get the Settings window back. |
-| 🎛️ **Control Center switch** | `miclock://toggle`, `miclock://on` and `miclock://off` for Shortcuts; a small indicator under the menu bar shows the new state. |
+| 🎛️ **Control Center toggle** | A native control (macOS 26+) that shows whether the lock is on and switches it with one tap. It can also go straight into the menu bar. |
+| ⌨️ **Scriptable** | `open -g miclock://on`, `miclock://off` and `miclock://toggle` from scripts or Shortcuts. |
 | 🪶 **Light** | One Swift file, about 13 MB of memory and no CPU while idle in the background. |
 
 <p align="center">
@@ -68,17 +69,15 @@ Your headphones keep playing in full quality.
 
 ## 🎛️ Control Center
 
-Control Center can run a shortcut with one tap:
+On macOS 26 and later MicLock ships a native Control Center toggle:
+open Control Center → **Edit Controls** → **MicLock** and drag it into Control Center
+or the menu bar. It shows whether the lock is on and switches it with one tap.
 
-1. In **Shortcuts**, create a shortcut with two actions: **URL** `miclock://toggle`, then **Open URLs**.
-2. Open Control Center → **Edit Controls** → **Shortcuts** and pick it.
-
-Each tap toggles the lock. A green or grey microphone appears for two seconds under the
-right end of the menu bar to show the new state.
+The control talks to the running app, so keep MicLock running (turn on **Open at login**).
 
 ## 🛠️ Build from source
 
-Needs the Xcode command line tools (`xcode-select --install`).
+Needs Xcode 26 or later: the Control Center toggle is built against the macOS 26 SDK.
 
 ```sh
 ./build.sh      # build.noindex/MicLock.app, universal arm64 + x86_64
