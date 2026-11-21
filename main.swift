@@ -1,4 +1,4 @@
-// MicLock: keeps the built-in MacBook microphone as the default input at full volume.
+// MicLock: keeps the built-in MacBook microphone as the default input at a fixed volume.
 // macOS makes every newly connected headset the input device (and drops Bluetooth
 // headphones into the low-quality headset profile); MicLock switches straight back.
 //
@@ -65,7 +65,7 @@ func setDefaultInput(_ device: AudioObjectID) {
 // Input volume lives on the main element on some devices and per channel on others.
 let volumeElements: [AudioObjectPropertyElement] = [kAudioObjectPropertyElementMain, 1, 2]
 
-func maximizeInputVolume(_ device: AudioObjectID) {
+func setInputVolume(_ device: AudioObjectID, to level: Float32) {
     for element in volumeElements {
         var addr = address(kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeInput, element)
         var settable: DarwinBoolean = false
@@ -73,9 +73,10 @@ func maximizeInputVolume(_ device: AudioObjectID) {
               AudioObjectIsPropertySettable(device, &addr, &settable) == noErr, settable.boolValue else { continue }
         var current: Float32 = 0, size = UInt32(MemoryLayout<Float32>.size)
         AudioObjectGetPropertyData(device, &addr, 0, nil, &size, &current)
-        if current < 1.0 {
-            var full: Float32 = 1.0
-            AudioObjectSetPropertyData(device, &addr, 0, nil, size, &full)
+        // Steps of the hardware scalar are coarser than 0.5 %, so this also stops set/notify loops.
+        if abs(current - level) > 0.005 {
+            var target = level
+            AudioObjectSetPropertyData(device, &addr, 0, nil, size, &target)
         }
     }
 }
@@ -98,6 +99,8 @@ final class Model: ObservableObject {
 
     @Published var lockEnabled: Bool { didSet { save("enabled", lockEnabled); controller?.lockChanged() } }
     @Published var fullVolume: Bool { didSet { save("fullVolume", fullVolume); controller?.enforce() } }
+    /// Input level in percent that "Keep input volume" holds; 100 unless the user picks another one.
+    @Published var targetVolume: Int { didSet { defaults.set(targetVolume, forKey: "targetVolume"); controller?.enforce() } }
     @Published var showInMenuBar: Bool { didSet { save("showInMenuBar", showInMenuBar); controller?.updateStatusItem() } }
     @Published var openAtLogin: Bool = SMAppService.mainApp.status == .enabled {
         didSet { if !syncingLogin && openAtLogin != oldValue { controller?.setOpenAtLogin(openAtLogin) } }
@@ -118,6 +121,7 @@ final class Model: ObservableObject {
         lockEnabled = defaults.object(forKey: "enabled") as? Bool ?? true
         fullVolume = defaults.object(forKey: "fullVolume") as? Bool ?? true
         showInMenuBar = defaults.object(forKey: "showInMenuBar") as? Bool ?? true
+        targetVolume = min(100, max(10, defaults.object(forKey: "targetVolume") as? Int ?? 100))
     }
 
     private func save(_ key: String, _ value: Bool) { defaults.set(value, forKey: key) }
@@ -217,7 +221,7 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
                 displaced = current
                 setDefaultInput(mic)
             }
-            if model.fullVolume { maximizeInputVolume(mic) }
+            if model.fullVolume { setInputVolume(mic, to: Float32(model.targetVolume) / 100) }
         }
         refreshInputInfo()
     }
@@ -313,7 +317,7 @@ final class Controller: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindo
         lock.state = model.lockEnabled ? .on : .off
         lock.target = self
         menu.addItem(lock)
-        let volume = NSMenuItem(title: "Keep Input Volume at 100 %", action: #selector(toggleVolume), keyEquivalent: "")
+        let volume = NSMenuItem(title: "Keep Input Volume at \(model.targetVolume) %", action: #selector(toggleVolume), keyEquivalent: "")
         volume.state = model.fullVolume ? .on : .off
         volume.target = self
         menu.addItem(volume)
@@ -389,8 +393,16 @@ struct SettingsView: View {
                         Text("Switch back to the MacBook microphone whenever macOS picks a headset mic.")
                     }
                     Toggle(isOn: $model.fullVolume) {
-                        Text("Keep input volume at 100 %")
-                        Text("Undo apps that lower the microphone level on their own.")
+                        Text("Keep input volume at \(model.targetVolume) %")
+                        Text("Undo apps that change the microphone level on their own.")
+                    }
+                    if model.fullVolume {
+                        LabeledContent("Input volume") {
+                            Slider(value: Binding(get: { Double(model.targetVolume) },
+                                                  set: { model.targetVolume = Int($0) }),
+                                   in: 10...100, step: 5)
+                                .frame(width: 200)
+                        }
                     }
                 }
                 Section {

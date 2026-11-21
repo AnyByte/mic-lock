@@ -5,7 +5,7 @@
 <h1 align="center">MicLock</h1>
 
 <p align="center">
-  Keeps your MacBook's built-in microphone selected and at full volume, whatever headphones you connect.
+  Keeps your MacBook's built-in microphone selected and at a fixed volume, whatever headphones you connect.
 </p>
 
 <p align="center">
@@ -31,7 +31,8 @@ The built-in microphone also has a habit of getting quieter on its own: call app
 macOS lower its input volume now and then, and you only notice when people stop hearing you.
 
 MicLock fixes both. It switches the input back to the built-in microphone as soon as macOS
-changes it, and puts the input volume back to 100 % whenever something lowers it.
+changes it, and puts the input volume back to the level you set (100 % by default) whenever
+something changes it.
 Your headphones keep playing in full quality.
 
 <p align="center">
@@ -43,7 +44,7 @@ Your headphones keep playing in full quality.
 | | |
 |---|---|
 | 🎙️ **Built-in mic stays selected** | Switches back the moment macOS picks a headset or any other microphone. No polling: MicLock reacts to CoreAudio device events and otherwise sleeps. |
-| 🔊 **Input volume at 100 %** | Puts the level back whenever an app or macOS turns it down. Can be turned off separately. |
+| 🔊 **Fixed input volume** | Holds the level you pick in Settings (100 % by default) and puts it back whenever an app or macOS changes it. Can be turned off separately. |
 | 🔁 **Clean off switch** | Turning the lock off hands the input back to the headset it replaced (or the Bluetooth one), just like macOS would have done. |
 | 🧭 **Menu bar or hidden** | Lives in the menu bar; hide the icon in Settings and open MicLock again from Finder or Spotlight to get the Settings window back. |
 | 🎛️ **Control Center toggle** | A native control (macOS 26+) that shows whether the lock is on and switches it with one tap. It can also go straight into the menu bar. |
