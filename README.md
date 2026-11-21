@@ -14,7 +14,7 @@
   <a href="https://github.com/AnyByte/mic-lock/releases"><img src="https://img.shields.io/github/downloads/AnyByte/mic-lock/total?color=34c759" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-13%2B-000000?logo=apple&logoColor=white" alt="macOS 13+">
   <img src="https://img.shields.io/badge/Apple%20Silicon%20%2B%20Intel-universal-555555" alt="Universal binary">
-  <img src="https://img.shields.io/badge/Swift-single%20file-F05138?logo=swift&logoColor=white" alt="Swift">
+  <img src="https://img.shields.io/badge/Swift-native-F05138?logo=swift&logoColor=white" alt="Swift">
 </p>
 
 ---
@@ -49,7 +49,7 @@ Your headphones keep playing in full quality.
 | 🧭 **Menu bar or hidden** | Lives in the menu bar; hide the icon in Settings and open MicLock again from Finder or Spotlight to get the Settings window back. |
 | 🎛️ **Control Center toggle** | A native control (macOS 26+) that shows whether the lock is on and switches it with one tap. It can also go straight into the menu bar. |
 | ⌨️ **Scriptable** | `open -g miclock://on`, `miclock://off` and `miclock://toggle` from scripts or Shortcuts. |
-| 🪶 **Light** | One Swift file, about 13 MB of memory and no CPU while idle in the background. |
+| 🪶 **Light** | Native Swift, about 13 MB of memory and no CPU while idle in the background. |
 
 <p align="center">
   <img src="docs/settings.png" width="460" alt="MicLock settings window">
