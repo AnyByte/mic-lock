@@ -1,0 +1,98 @@
+<p align="center">
+  <img src="docs/icon.png" width="160" alt="MicLock icon">
+</p>
+
+<h1 align="center">MicLock</h1>
+
+<p align="center">
+  Keeps your MacBook's built-in microphone selected and at full volume, whatever headphones you connect.
+</p>
+
+<p align="center">
+  <a href="https://github.com/AnyByte/mic-lock/releases/latest"><img src="https://img.shields.io/github/v/release/AnyByte/mic-lock?label=release&color=0a84ff" alt="Latest release"></a>
+  <a href="https://github.com/AnyByte/mic-lock/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/AnyByte/mic-lock/release.yml?label=build" alt="Build"></a>
+  <a href="https://github.com/AnyByte/mic-lock/releases"><img src="https://img.shields.io/github/downloads/AnyByte/mic-lock/total?color=34c759" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/macOS-13%2B-000000?logo=apple&logoColor=white" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/Apple%20Silicon%20%2B%20Intel-universal-555555" alt="Universal binary">
+  <img src="https://img.shields.io/badge/Swift-single%20file-F05138?logo=swift&logoColor=white" alt="Swift">
+</p>
+
+---
+
+## 🎧 Why
+
+Every time you connect headphones, macOS makes **their** microphone the input device.
+With Bluetooth headphones that's a bad deal: the moment anything uses that microphone,
+the headphones drop from high-quality stereo to the low-bitrate headset profile. That's why
+the other side of a call sounds muffled and music turns flat during calls. The MacBook's own
+microphone usually sounds better anyway.
+
+The built-in microphone also has a habit of getting quieter on its own: call apps and
+macOS lower its input volume now and then, and you only notice when people stop hearing you.
+
+MicLock fixes both. It switches the input back to the built-in microphone as soon as macOS
+changes it, and puts the input volume back to 100 % whenever something lowers it.
+Your headphones keep playing in full quality.
+
+<p align="center">
+  <img src="docs/menu.png" width="320" alt="MicLock menu: current input, lock and volume toggles">
+</p>
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🎙️ **Built-in mic stays selected** | Switches back the moment macOS picks a headset or any other microphone. No polling: MicLock reacts to CoreAudio device events and otherwise sleeps. |
+| 🔊 **Input volume at 100 %** | Puts the level back whenever an app or macOS turns it down. Can be turned off separately. |
+| 🔁 **Clean off switch** | Turning the lock off hands the input back to the headset it replaced (or the Bluetooth one), just like macOS would have done. |
+| 🧭 **Menu bar or hidden** | Lives in the menu bar; hide the icon in Settings and open MicLock again from Finder or Spotlight to get the Settings window back. |
+| 🎛️ **Control Center switch** | `miclock://toggle`, `miclock://on` and `miclock://off` for Shortcuts; a small indicator under the menu bar shows the new state. |
+| 🪶 **Light** | One Swift file, about 13 MB of memory and no CPU while idle in the background. |
+
+<p align="center">
+  <img src="docs/settings.png" width="460" alt="MicLock settings window">
+</p>
+
+## 📦 Install
+
+1. Download `MicLock-<version>.zip` from the
+   [latest release](https://github.com/AnyByte/mic-lock/releases/latest).
+2. Unzip it and move `MicLock.app` to `/Applications`.
+3. The app is not notarized, so remove the quarantine flag once before the first launch:
+
+   ```sh
+   xattr -dr com.apple.quarantine /Applications/MicLock.app
+   ```
+
+4. Open it and turn on **Open at login** in Settings.
+
+## 🎛️ Control Center
+
+Control Center can run a shortcut with one tap:
+
+1. In **Shortcuts**, create a shortcut with two actions: **URL** `miclock://toggle`, then **Open URLs**.
+2. Open Control Center → **Edit Controls** → **Shortcuts** and pick it.
+
+Each tap toggles the lock. A green or grey microphone appears for two seconds under the
+right end of the menu bar to show the new state.
+
+## 🛠️ Build from source
+
+Needs the Xcode command line tools (`xcode-select --install`).
+
+```sh
+./build.sh      # build.noindex/MicLock.app, universal arm64 + x86_64
+./install.sh    # build, copy to ~/Applications, start it and register it as a login item
+```
+
+The icon is an Icon Composer file (`icon/AppIcon.icon`); `icon/compile.sh` compiles it
+with Xcode 26+ and the output is committed, so builds do not need a new Xcode.
+
+## 🚀 Releases
+
+Pushing a tag `v*` runs the GitHub Actions workflow, which builds the universal app and
+attaches the zip to a new release:
+
+```sh
+git tag v1.2.3 && git push origin v1.2.3
+```
