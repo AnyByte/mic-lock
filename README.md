@@ -67,7 +67,7 @@ or the menu bar. It shows whether the lock is on and switches it with one tap.
 The control talks to the running app, so keep MicLock running (turn on **Open at login**).
 
 <p align="center">
-  <img src="docs/control-center.png" width="300" alt="MicLock toggle in Control Center">
+  <img src="docs/controls.png" width="300" alt="MicLock toggle in Control Center">
 </p>
 
 ## 🛠️ Build from source
